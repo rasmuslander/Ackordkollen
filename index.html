@@ -23,7 +23,7 @@
   <input id="password" type="password" placeholder="Lösenord">
   <button onclick="login()">Logga in / Registrera</button>
 </div>
-
+<p id="msg" style="margin-top:10px;color:#b00020;"></p>
 <div class="card" id="app" style="display:none;">
   <h3>Projekt</h3>
   <input id="target" type="number" placeholder="Måltimmar (t.ex. 100)">
@@ -44,6 +44,42 @@
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   async function login() {
+  const msg = document.getElementById("msg");
+  try {
+    msg.textContent = "Jobbar...";
+
+    const emailValue = document.getElementById("email").value.trim();
+    const passwordValue = document.getElementById("password").value;
+
+    // Försök logga in
+    const signIn = await supabase.auth.signInWithPassword({
+      email: emailValue,
+      password: passwordValue
+    });
+
+    if (!signIn.error) {
+      msg.textContent = "Inloggad!";
+      start();
+      return;
+    }
+
+    // Om inlogg misslyckas: försök registrera
+    const signUp = await supabase.auth.signUp({
+      email: emailValue,
+      password: passwordValue
+    });
+
+    if (signUp.error) {
+      msg.textContent = "Fel: " + signUp.error.message;
+      return;
+    }
+
+    msg.textContent =
+      "Konto skapat! Om e-postbekräftelse är på i Supabase: kolla din mail och bekräfta, sen tryck Logga in igen.";
+  } catch (e) {
+    msg.textContent = "Tekniskt fel: " + (e?.message || e);
+  }
+}
     const email = email.value;
     const password = password.value;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
